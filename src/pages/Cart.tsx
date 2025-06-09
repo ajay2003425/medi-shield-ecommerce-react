@@ -1,5 +1,4 @@
-
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useCart } from '@/contexts/CartContext';
@@ -9,6 +8,7 @@ import { Minus, Plus, Trash2, ShoppingBag } from 'lucide-react';
 const Cart = () => {
   const { items, loading, updateQuantity, removeFromCart, getTotalPrice } = useCart();
   const { user } = useAuth();
+  const navigate = useNavigate();
 
   if (!user) {
     return (
@@ -140,13 +140,21 @@ const Cart = () => {
                     <span>Shipping</span>
                     <span>₹50.00</span>
                   </div>
+                  <div className="flex justify-between">
+                    <span>Tax (5%)</span>
+                    <span>₹{(getTotalPrice() * 0.05).toFixed(2)}</span>
+                  </div>
                   <div className="border-t pt-4">
                     <div className="flex justify-between font-semibold text-lg">
                       <span>Total</span>
-                      <span>₹{(getTotalPrice() + 50).toFixed(2)}</span>
+                      <span>₹{(getTotalPrice() + 50 + (getTotalPrice() * 0.05)).toFixed(2)}</span>
                     </div>
                   </div>
-                  <Button className="w-full mt-6" size="lg">
+                  <Button 
+                    className="w-full mt-6" 
+                    size="lg"
+                    onClick={() => navigate('/checkout')}
+                  >
                     Proceed to Checkout
                   </Button>
                 </div>

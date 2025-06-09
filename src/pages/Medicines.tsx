@@ -1,5 +1,5 @@
-
 import { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -150,11 +150,13 @@ const Medicines = () => {
           {filteredProducts.map((product) => (
             <Card key={product.id} className="overflow-hidden hover:shadow-lg transition-shadow">
               <div className="relative">
-                <img
-                  src={product.image_url || "https://images.unsplash.com/photo-1584017911766-d451b3d0e843?w=300&h=300&fit=crop"}
-                  alt={product.name}
-                  className="w-full h-48 object-cover"
-                />
+                <Link to={`/product/${product.id}`}>
+                  <img
+                    src={product.image_url || "https://images.unsplash.com/photo-1584017911766-d451b3d0e843?w=300&h=300&fit=crop"}
+                    alt={product.name}
+                    className="w-full h-48 object-cover hover:scale-105 transition-transform cursor-pointer"
+                  />
+                </Link>
                 {product.requires_prescription && (
                   <Badge className="absolute top-2 right-2 bg-orange-500">
                     Rx Required
@@ -169,7 +171,9 @@ const Medicines = () => {
 
               <CardContent className="p-4">
                 <div className="mb-2">
-                  <h3 className="font-semibold text-gray-900 mb-1">{product.name}</h3>
+                  <Link to={`/product/${product.id}`}>
+                    <h3 className="font-semibold text-gray-900 mb-1 hover:text-blue-600 cursor-pointer">{product.name}</h3>
+                  </Link>
                   <p className="text-sm text-gray-600">{product.brand}</p>
                 </div>
 
