@@ -1,12 +1,16 @@
 
 import { Link, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { ShoppingCart, User, Menu, X } from "lucide-react";
+import { ShoppingCart, User, Menu, X, LogOut } from "lucide-react";
 import { useState } from "react";
+import { useAuth } from "@/contexts/AuthContext";
+import { useCart } from "@/contexts/CartContext";
 
 const Navbar = () => {
   const location = useLocation();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const { user, signOut } = useAuth();
+  const { getTotalItems } = useCart();
 
   const navItems = [
     { name: "Home", path: "/" },
@@ -15,6 +19,8 @@ const Navbar = () => {
     { name: "Lab Tests", path: "/lab-tests" },
     { name: "Consult Doctor", path: "/consult-doctor" },
   ];
+
+  const cartItemCount = getTotalItems();
 
   return (
     <nav className="bg-white shadow-lg border-b sticky top-0 z-50">
@@ -47,14 +53,36 @@ const Navbar = () => {
 
           {/* Right side icons */}
           <div className="flex items-center space-x-4">
-            <Button variant="ghost" size="sm" className="hidden md:flex">
-              <ShoppingCart className="h-5 w-5" />
-              <span className="ml-2">Cart</span>
-            </Button>
-            <Button variant="ghost" size="sm" className="hidden md:flex">
-              <User className="h-5 w-5" />
-              <span className="ml-2">Login</span>
-            </Button>
+            <Link to="/cart">
+              <Button variant="ghost" size="sm" className="hidden md:flex relative">
+                <ShoppingCart className="h-5 w-5" />
+                <span className="ml-2">Cart</span>
+                {cartItemCount > 0 && (
+                  <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+                    {cartItemCount}
+                  </span>
+                )}
+              </Button>
+            </Link>
+
+            {user ? (
+              <div className="hidden md:flex items-center space-x-2">
+                <span className="text-sm text-gray-700">
+                  Welcome, {user.email?.split('@')[0]}
+                </span>
+                <Button variant="ghost" size="sm" onClick={signOut}>
+                  <LogOut className="h-4 w-4 mr-2" />
+                  Logout
+                </Button>
+              </div>
+            ) : (
+              <Link to="/auth">
+                <Button variant="ghost" size="sm" className="hidden md:flex">
+                  <User className="h-5 w-5" />
+                  <span className="ml-2">Login</span>
+                </Button>
+              </Link>
+            )}
 
             {/* Mobile menu button */}
             <Button
@@ -87,14 +115,36 @@ const Navbar = () => {
                 </Link>
               ))}
               <div className="flex flex-col space-y-2 pt-2 border-t">
-                <Button variant="ghost" size="sm" className="justify-start">
-                  <ShoppingCart className="h-5 w-5 mr-2" />
-                  Cart
-                </Button>
-                <Button variant="ghost" size="sm" className="justify-start">
-                  <User className="h-5 w-5 mr-2" />
-                  Login
-                </Button>
+                <Link to="/cart">
+                  <Button variant="ghost" size="sm" className="justify-start w-full relative">
+                    <ShoppingCart className="h-5 w-5 mr-2" />
+                    Cart
+                    {cartItemCount > 0 && (
+                      <span className="ml-auto bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+                        {cartItemCount}
+                      </span>
+                    )}
+                  </Button>
+                </Link>
+                
+                {user ? (
+                  <div className="space-y-2">
+                    <div className="px-3 py-2 text-sm text-gray-700">
+                      Welcome, {user.email?.split('@')[0]}
+                    </div>
+                    <Button variant="ghost" size="sm" className="justify-start w-full" onClick={signOut}>
+                      <LogOut className="h-5 w-5 mr-2" />
+                      Logout
+                    </Button>
+                  </div>
+                ) : (
+                  <Link to="/auth">
+                    <Button variant="ghost" size="sm" className="justify-start w-full">
+                      <User className="h-5 w-5 mr-2" />
+                      Login
+                    </Button>
+                  </Link>
+                )}
               </div>
             </div>
           </div>
