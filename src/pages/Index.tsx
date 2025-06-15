@@ -1,4 +1,3 @@
-
 import { Link } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -58,12 +57,16 @@ const Index = () => {
               we've got everything you need for a healthier tomorrow.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Button size="lg" className="bg-gradient-to-r from-blue-600 to-teal-600 hover:from-blue-700 hover:to-teal-700">
-                Shop Medicines
-              </Button>
-              <Button size="lg" variant="outline">
-                Book Consultation
-              </Button>
+              <Link to="/medicines">
+                <Button size="lg" className="bg-gradient-to-r from-blue-600 to-teal-600 hover:from-blue-700 hover:to-teal-700">
+                  Shop Medicines
+                </Button>
+              </Link>
+              <Link to="/consult-doctor">
+                <Button size="lg" variant="outline">
+                  Book Consultation
+                </Button>
+              </Link>
             </div>
           </div>
 
