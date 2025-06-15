@@ -6,12 +6,34 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Search, ShoppingCart, Star, Heart } from "lucide-react";
+import { Search, ShoppingCart, Heart } from "lucide-react";
 import { toast } from "sonner";
+import StarRating from "@/components/StarRating";
 
-// Helper: fetch health products from Supabase
-const fetchHealthProducts = async () => {
-  // First, fetch the categories to find ID for "Health Products" (if needed)
+// --- EXTEND PRODUCT TYPE LOCALLY ---
+export type Product = {
+  id: string;
+  name: string;
+  brand?: string | null;
+  manufacturer?: string | null;
+  description?: string | null;
+  image_url?: string | null;
+  category_id?: string | null;
+  dosage?: string | null;
+  price: number;
+  original_price?: number | null;
+  discount?: number | null;
+  bestseller?: boolean | null;
+  rating?: number | null;
+  reviews?: { author: string; comment: string; stars: number }[] | null;
+  stock?: number | null;
+  requires_prescription?: boolean | null;
+  side_effects?: string | null;
+  created_at?: string;
+  updated_at?: string;
+};
+
+const fetchHealthProducts = async (): Promise<Product[]> => {
   const { data: category, error: catErr } = await supabase
     .from("categories")
     .select("id")
@@ -20,7 +42,6 @@ const fetchHealthProducts = async () => {
 
   if (catErr || !category) throw new Error("Category not found");
 
-  // Now fetch products in that category
   const { data, error } = await supabase
     .from("products")
     .select("*")
@@ -28,43 +49,44 @@ const fetchHealthProducts = async () => {
 
   if (error) throw error;
 
-  return data ?? [];
+  // Optional: ensure reviews parsed if needed
+  return (data ?? []).map((p) => ({
+    ...p,
+    reviews: Array.isArray(p.reviews)
+      ? p.reviews
+      : (typeof p.reviews === "string" ? JSON.parse(p.reviews) : []),
+  }));
 };
 
 const HealthProducts = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("all");
 
-  // Categories (you might want to fetch these dynamically as well)
   const categories = [
     { id: "all", name: "All Products", icon: "🏥" },
     { id: "fitness", name: "Fitness", icon: "💪" },
     { id: "supplements", name: "Supplements", icon: "💊" },
     { id: "personal-care", name: "Personal Care", icon: "🧴" },
     { id: "baby-care", name: "Baby Care", icon: "👶" },
-    { id: "elderly-care", name: "Elderly Care", icon: "👴" }
+    { id: "elderly-care", name: "Elderly Care", icon: "👴" },
   ];
 
-  // Fetch products from Supabase
   const { data: products, isLoading, error } = useQuery({
     queryKey: ["health-products"],
     queryFn: fetchHealthProducts,
   });
 
-  // Filtering & searching logic
   const filteredProducts = (products ?? []).filter((product) => {
     const matchesSearch =
       product.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       product.brand?.toLowerCase().includes(searchTerm.toLowerCase());
-    // Map category_id to human-readable category (if you want better filtering, add map from category_id to type)
     const matchesCategory =
       selectedCategory === "all" ||
-      (product.category_id &&
-        categories.find((c) => c.id === selectedCategory));
+      (product.category_id && categories.find((c) => c.id === selectedCategory));
     return matchesSearch && matchesCategory;
   });
 
-  const addToCart = (product) => {
+  const addToCart = (product: Product) => {
     if (!product.stock || product.stock <= 0) {
       toast.error("This product is currently out of stock");
       return;
@@ -72,7 +94,7 @@ const HealthProducts = () => {
     toast.success(`${product.name} added to cart!`);
   };
 
-  const addToWishlist = (product) => {
+  const addToWishlist = (product: Product) => {
     toast.success(`${product.name} added to wishlist!`);
   };
 
@@ -84,7 +106,6 @@ const HealthProducts = () => {
           <h1 className="text-3xl font-bold text-gray-900 mb-2">Health Products</h1>
           <p className="text-gray-600">Wellness products for a healthier lifestyle</p>
         </div>
-
         {/* Search and Categories */}
         <div className="bg-white p-6 rounded-lg shadow-sm mb-8">
           <div className="mb-6">
@@ -145,9 +166,9 @@ const HealthProducts = () => {
                   className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300"
                 />
                 <div className="absolute top-2 left-2 flex flex-col gap-1">
-                  {product.discount && (
+                  {product.discount && Number(product.discount) > 0 && (
                     <Badge className="bg-red-500">
-                      {product.discount}% OFF
+                      -{Number(product.discount)}%
                     </Badge>
                   )}
                   {product.bestseller && (
@@ -181,27 +202,28 @@ const HealthProducts = () => {
                 </div>
                 <p className="text-sm text-gray-600 mb-3 line-clamp-2">{product.description}</p>
                 <div className="flex items-center mb-3">
-                  <div className="flex items-center">
-                    <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-                    <span className="text-sm font-medium ml-1">
-                      {product.rating ?? "4.5"}
-                    </span>
-                  </div>
+                  {/* Render star rating and reviews count */}
+                  <StarRating
+                    rating={typeof product.rating === "number" ? product.rating : 0}
+                  />
                   <span className="text-sm text-gray-500 ml-2">
-                    ({product.reviews ?? "100+"})
+                    ({Array.isArray(product.reviews) ? product.reviews.length : 0})
                   </span>
                 </div>
-                <div className="flex items-center justify-between mb-4">
-                  <div className="flex items-center space-x-2">
+                <div className="flex items-center space-x-2 mb-4">
+                    {product.original_price && (
+                      <span className="text-sm text-gray-500 line-through mr-1">
+                        ₹{Number(product.original_price).toFixed(2)}
+                      </span>
+                    )}
                     <span className="text-lg font-bold text-gray-900">
                       ₹{Number(product.price).toFixed(2)}
                     </span>
-                    {product.originalPrice && (
-                      <span className="text-sm text-gray-500 line-through">
-                        ₹{Number(product.originalPrice).toFixed(2)}
-                      </span>
+                    {product.discount && Number(product.discount) > 0 && (
+                      <Badge className="bg-red-500">
+                        -{Number(product.discount)}%
+                      </Badge>
                     )}
-                  </div>
                 </div>
                 <Button
                   className="w-full"
@@ -226,3 +248,4 @@ const HealthProducts = () => {
 };
 
 export default HealthProducts;
+

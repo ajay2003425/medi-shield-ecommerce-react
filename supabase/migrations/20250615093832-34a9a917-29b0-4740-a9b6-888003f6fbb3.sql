@@ -1,0 +1,8 @@
+
+-- Add pricing and metadata columns to products
+ALTER TABLE products
+  ADD COLUMN IF NOT EXISTS discount NUMERIC DEFAULT 0,
+  ADD COLUMN IF NOT EXISTS original_price NUMERIC,
+  ADD COLUMN IF NOT EXISTS bestseller BOOLEAN DEFAULT FALSE,
+  ADD COLUMN IF NOT EXISTS rating NUMERIC DEFAULT 0 CHECK (rating BETWEEN 0 AND 5),
+  ADD COLUMN IF NOT EXISTS reviews JSONB DEFAULT '[]';

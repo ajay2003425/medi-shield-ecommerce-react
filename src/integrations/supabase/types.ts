@@ -263,49 +263,64 @@ export type Database = {
       }
       products: {
         Row: {
+          bestseller: boolean | null
           brand: string | null
           category_id: string | null
           created_at: string
           description: string | null
+          discount: number | null
           dosage: string | null
           id: string
           image_url: string | null
           manufacturer: string | null
           name: string
+          original_price: number | null
           price: number
+          rating: number | null
           requires_prescription: boolean | null
+          reviews: Json | null
           side_effects: string | null
           stock: number | null
           updated_at: string
         }
         Insert: {
+          bestseller?: boolean | null
           brand?: string | null
           category_id?: string | null
           created_at?: string
           description?: string | null
+          discount?: number | null
           dosage?: string | null
           id?: string
           image_url?: string | null
           manufacturer?: string | null
           name: string
+          original_price?: number | null
           price: number
+          rating?: number | null
           requires_prescription?: boolean | null
+          reviews?: Json | null
           side_effects?: string | null
           stock?: number | null
           updated_at?: string
         }
         Update: {
+          bestseller?: boolean | null
           brand?: string | null
           category_id?: string | null
           created_at?: string
           description?: string | null
+          discount?: number | null
           dosage?: string | null
           id?: string
           image_url?: string | null
           manufacturer?: string | null
           name?: string
+          original_price?: number | null
           price?: number
+          rating?: number | null
           requires_prescription?: boolean | null
+          reviews?: Json | null
           side_effects?: string | null
           stock?: number | null
           updated_at?: string
