@@ -15,7 +15,7 @@ const Navbar = () => {
   const navItems = [
     { name: "Home", path: "/" },
     { name: "Medicines", path: "/medicines" },
-    { name: "Health Products", path: "/health-products" },
+    // Removed Health Products page
     { name: "Lab Tests", path: "/lab-tests" },
     { name: "Consult Doctor", path: "/consult-doctor" },
   ];

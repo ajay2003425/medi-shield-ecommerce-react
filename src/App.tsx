@@ -7,7 +7,6 @@ import { AuthProvider } from "./contexts/AuthContext";
 import { CartProvider } from "./contexts/CartContext";
 import Index from "./pages/Index";
 import Medicines from "./pages/Medicines";
-import HealthProducts from "./pages/HealthProducts";
 import LabTests from "./pages/LabTests";
 import ConsultDoctor from "./pages/ConsultDoctor";
 import Auth from "./pages/Auth";
@@ -33,7 +32,6 @@ const App = () => (
               <Routes>
                 <Route path="/" element={<Index />} />
                 <Route path="/medicines" element={<Medicines />} />
-                <Route path="/health-products" element={<HealthProducts />} />
                 <Route path="/lab-tests" element={<LabTests />} />
                 <Route path="/consult-doctor" element={<ConsultDoctor />} />
                 <Route path="/auth" element={<Auth />} />
