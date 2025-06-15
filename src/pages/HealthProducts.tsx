@@ -1,5 +1,4 @@
-
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
@@ -33,6 +32,15 @@ export type Product = {
   updated_at?: string;
 };
 
+const fetchCategories = async () => {
+  // Fetch only categories that have products in them
+  const { data, error } = await supabase
+    .from("categories")
+    .select("id, name, icon");
+  if (error) throw error;
+  return data ?? [];
+};
+
 const fetchHealthProducts = async (): Promise<Product[]> => {
   const { data: category, error: catErr } = await supabase
     .from("categories")
@@ -58,31 +66,53 @@ const fetchHealthProducts = async (): Promise<Product[]> => {
   }));
 };
 
+// Placeholder image
+const PLACEHOLDER_IMAGE = "/placeholder.svg"; // Use a static asset
+
 const HealthProducts = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("all");
+  const [categoriesDb, setCategoriesDb] = useState<
+    { id: string; name: string; icon?: string | null }[]
+  >([]);
+  const [catLoading, setCatLoading] = useState(true);
 
-  const categories = [
-    { id: "all", name: "All Products", icon: "🏥" },
-    { id: "fitness", name: "Fitness", icon: "💪" },
-    { id: "supplements", name: "Supplements", icon: "💊" },
-    { id: "personal-care", name: "Personal Care", icon: "🧴" },
-    { id: "baby-care", name: "Baby Care", icon: "👶" },
-    { id: "elderly-care", name: "Elderly Care", icon: "👴" },
-  ];
+  useEffect(() => {
+    // Get all categories from DB on mount
+    const fetch = async () => {
+      setCatLoading(true);
+      try {
+        const cats = await fetchCategories();
+        setCategoriesDb([
+          { id: "all", name: "All Products", icon: "🌈" },
+          ...cats.map((c) => ({
+            id: c.id,
+            name: c.name,
+            icon: c.icon || "🏥",
+          })),
+        ]);
+      } catch {
+        setCategoriesDb([{ id: "all", name: "All Products", icon: "🌈" }]);
+      }
+      setCatLoading(false);
+    };
+    fetch();
+  }, []);
 
   const { data: products, isLoading, error } = useQuery({
     queryKey: ["health-products"],
     queryFn: fetchHealthProducts,
   });
 
+  // Robust search: also match description
   const filteredProducts = (products ?? []).filter((product) => {
     const matchesSearch =
       product.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      product.brand?.toLowerCase().includes(searchTerm.toLowerCase());
+      product.brand?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      product.description?.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesCategory =
       selectedCategory === "all" ||
-      (product.category_id && categories.find((c) => c.id === selectedCategory));
+      (product.category_id && product.category_id === selectedCategory);
     return matchesSearch && matchesCategory;
   });
 
@@ -120,17 +150,27 @@ const HealthProducts = () => {
             </div>
           </div>
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
-            {categories.map((category) => (
-              <Button
-                key={category.id}
-                variant={selectedCategory === category.id ? "default" : "outline"}
-                size="sm"
-                onClick={() => setSelectedCategory(category.id)}
-                className="flex flex-col items-center p-3 h-auto"
-              >
-                <span className="text-lg mb-1">{category.icon}</span>
-                <span className="text-xs text-center">{category.name}</span>
-              </Button>
+            {(catLoading
+              ? Array.from({ length: 6 })
+              : categoriesDb
+            ).map((category, idx) => (
+              catLoading ? (
+                <div
+                  key={idx}
+                  className="h-14 rounded bg-gray-100 animate-pulse"
+                />
+              ) : (
+                <Button
+                  key={category.id}
+                  variant={selectedCategory === category.id ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => setSelectedCategory(category.id)}
+                  className="flex flex-col items-center p-3 h-auto"
+                >
+                  <span className="text-lg mb-1">{category.icon}</span>
+                  <span className="text-xs text-center">{category.name}</span>
+                </Button>
+              )
             ))}
           </div>
         </div>
@@ -160,10 +200,13 @@ const HealthProducts = () => {
           {!isLoading && filteredProducts.map((product) => (
             <Card key={product.id} className="overflow-hidden hover:shadow-lg transition-shadow group">
               <div className="relative">
+                {/* Lazy loading image with fallback */}
                 <img
-                  src={product.image_url ?? ""}
+                  src={product.image_url ?? PLACEHOLDER_IMAGE}
                   alt={product.name}
                   className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300"
+                  loading="lazy"
+                  onError={(e) => { (e.target as HTMLImageElement).src = PLACEHOLDER_IMAGE; }}
                 />
                 <div className="absolute top-2 left-2 flex flex-col gap-1">
                   {product.discount && Number(product.discount) > 0 && (
@@ -186,7 +229,6 @@ const HealthProducts = () => {
                 >
                   <Heart className="h-4 w-4" />
                 </Button>
-
                 {product.stock === 0 && (
                   <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center">
                     <Badge variant="destructive">Out of Stock</Badge>
@@ -202,10 +244,7 @@ const HealthProducts = () => {
                 </div>
                 <p className="text-sm text-gray-600 mb-3 line-clamp-2">{product.description}</p>
                 <div className="flex items-center mb-3">
-                  {/* Render star rating and reviews count */}
-                  <StarRating
-                    rating={typeof product.rating === "number" ? product.rating : 0}
-                  />
+                  <StarRating rating={typeof product.rating === "number" ? product.rating : 0} />
                   <span className="text-sm text-gray-500 ml-2">
                     ({Array.isArray(product.reviews) ? product.reviews.length : 0})
                   </span>
@@ -248,4 +287,3 @@ const HealthProducts = () => {
 };
 
 export default HealthProducts;
-
