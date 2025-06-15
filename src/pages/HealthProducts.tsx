@@ -69,12 +69,19 @@ const fetchHealthProducts = async (): Promise<Product[]> => {
 // Placeholder image
 const PLACEHOLDER_IMAGE = "/placeholder.svg"; // Use a static asset
 
+const skeletonCategories = Array.from({ length: 6 }).map((_, i) => ({
+  id: `skeleton-${i}`,
+  name: "",
+  icon: "",
+  skeleton: true,
+}));
+
 const HealthProducts = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [categoriesDb, setCategoriesDb] = useState<
-    { id: string; name: string; icon?: string | null }[]
-  >([]);
+    ({ id: string; name: string; icon?: string | null; skeleton?: boolean })[]
+  >(skeletonCategories);
   const [catLoading, setCatLoading] = useState(true);
 
   useEffect(() => {
@@ -150,14 +157,12 @@ const HealthProducts = () => {
             </div>
           </div>
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
-            {(catLoading
-              ? Array.from({ length: 6 })
-              : categoriesDb
-            ).map((category, idx) => (
-              catLoading ? (
+            {categoriesDb.map((category, idx) =>
+              category.skeleton ? (
                 <div
-                  key={idx}
+                  key={category.id}
                   className="h-14 rounded bg-gray-100 animate-pulse"
+                  aria-hidden="true"
                 />
               ) : (
                 <Button
@@ -171,7 +176,7 @@ const HealthProducts = () => {
                   <span className="text-xs text-center">{category.name}</span>
                 </Button>
               )
-            ))}
+            )}
           </div>
         </div>
 
